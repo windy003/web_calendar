@@ -87,6 +87,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     solarDate.classList.add('solar-date');
                     
                     dateContainer.appendChild(solarDate);
+                    
+                    // 添加上个月的农历信息
+                    try {
+                        if (typeof Lunar !== 'undefined') {
+                            // 计算上个月的年份和月份
+                            let prevMonth = currentMonth - 1;
+                            let prevYear = currentYear;
+                            if (prevMonth < 0) {
+                                prevMonth = 11;
+                                prevYear--;
+                            }
+                            
+                            const lunarDate = Lunar.fromDate(new Date(prevYear, prevMonth, prevDate));
+                            const lunarElement = document.createElement('div');
+                            lunarElement.textContent = lunarDate.getDayInChinese();
+                            lunarElement.classList.add('lunar-date');
+                            
+                            dateContainer.appendChild(lunarElement);
+                        }
+                    } catch (e) {
+                        console.error('上个月农历转换错误:', e);
+                    }
+                    
                     cell.appendChild(dateContainer);
                     cell.classList.add('other-month');
                 } else if (date > daysInMonth) {
@@ -99,6 +122,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     solarDate.classList.add('solar-date');
                     
                     dateContainer.appendChild(solarDate);
+                    
+                    // 添加下个月的农历信息
+                    try {
+                        if (typeof Lunar !== 'undefined') {
+                            // 计算下个月的年份和月份
+                            let nextMonth = currentMonth + 1;
+                            let nextYear = currentYear;
+                            if (nextMonth > 11) {
+                                nextMonth = 0;
+                                nextYear++;
+                            }
+                            
+                            const lunarDate = Lunar.fromDate(new Date(nextYear, nextMonth, nextMonthDate));
+                            const lunarElement = document.createElement('div');
+                            lunarElement.textContent = lunarDate.getDayInChinese();
+                            lunarElement.classList.add('lunar-date');
+                            
+                            dateContainer.appendChild(lunarElement);
+                        }
+                    } catch (e) {
+                        console.error('下个月农历转换错误:', e);
+                    }
+                    
                     cell.appendChild(dateContainer);
                     cell.classList.add('other-month');
                     
