@@ -449,4 +449,115 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 页面加载后运行初始化
     initCalendar();
+
+    // 添加点击月份标题事件，弹出日期选择器
+    monthYearElement.addEventListener('click', showDatePicker);
+    
+    // 创建日期选择器函数
+    function showDatePicker() {
+        // 创建模态窗口
+        const modal = document.createElement('div');
+        modal.classList.add('date-picker-modal');
+        
+        // 创建日期选择器容器
+        const pickerContainer = document.createElement('div');
+        pickerContainer.classList.add('date-picker-container');
+        
+        // 创建标题
+        const title = document.createElement('h3');
+        title.textContent = '选择日期';
+        pickerContainer.appendChild(title);
+        
+        // 创建年份选择器
+         yearLabel = document.createElement('label');
+        yearLabel.textContent = '年份：';
+        yearSelect = document.createElement('select');
+        
+        // 添加年份选项（当前年份前后10年）
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year + '年';
+            if (year === currentYear) {
+                option.selected = true;
+            }
+            yearSelect.appendChild(option);
+        }
+        
+        yearLabel.appendChild(yearSelect);
+        pickerContainer.appendChild(yearLabel);
+        
+        // 创建月份选择器
+        const monthLabel = document.createElement('label');
+        monthLabel.textContent = '月份：';
+        const monthSelect = document.createElement('select');
+        
+        // 添加月份选项
+        const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+        for (let i = 0; i < 12; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = monthNames[i];
+            if (i === currentMonth) {
+                option.selected = true;
+            }
+            monthSelect.appendChild(option);
+        }
+        
+        monthLabel.appendChild(monthSelect);
+        pickerContainer.appendChild(monthLabel);
+        
+        // 创建按钮容器
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('picker-buttons');
+        
+        // 创建确认按钮
+        const confirmButton = document.createElement('button');
+        confirmButton.textContent = '确定';
+        confirmButton.addEventListener('click', function() {
+            // 使用新变量存储选择的值，而不是直接修改 currentYear 和 currentMonth
+            const selectedYear = parseInt(yearSelect.value);
+            const selectedMonth = parseInt(monthSelect.value);
+            
+            // 关闭模态窗口
+            document.body.removeChild(modal);
+            
+            // 更新日历到选定的日期（通过函数调用而不是直接赋值）
+            updateCalendarDate(selectedYear, selectedMonth);
+        });
+        
+        buttonContainer.appendChild(confirmButton);
+        
+        // 创建取消按钮
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = '取消';
+        cancelButton.addEventListener('click', function() {
+            // 关闭模态窗口
+            document.body.removeChild(modal);
+        });
+        
+        buttonContainer.appendChild(cancelButton);
+        pickerContainer.appendChild(buttonContainer);
+        
+        // 将选择器添加到模态窗口
+        modal.appendChild(pickerContainer);
+        
+        // 点击模态窗口背景关闭
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+        
+        // 将模态窗口添加到页面
+        document.body.appendChild(modal);
+    }
+
+    // 添加一个新函数来更新日历日期
+    function updateCalendarDate(year, month) {
+        currentYear = year;
+        currentMonth = month;
+        renderCalendar();
+    }
 });

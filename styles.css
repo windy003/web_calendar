@@ -138,4 +138,77 @@ body {
 
 .important-holiday {
     font-weight: bold; /* 重要节日加粗 */
+}
+
+/* 日期选择器模态窗口 */
+.date-picker-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.date-picker-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    min-width: 300px;
+}
+
+.date-picker-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.date-picker-container label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.date-picker-container select {
+    margin-left: 10px;
+    padding: 5px;
+    font-size: 16px;
+    min-width: 120px;
+}
+
+.picker-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.picker-buttons button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.picker-buttons button:first-child {
+    background-color: #4caf50;
+    color: white;
+}
+
+.picker-buttons button:last-child {
+    background-color: #f44336;
+    color: white;
+}
+
+/* 月份标题添加鼠标样式，表明可点击 */
+#month-year {
+    cursor: pointer;
+}
+
+#month-year:hover {
+    text-decoration: underline;
 } 
