@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易日历</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button id="prev-month">上个月</button>
+            <h2 id="month-year">2023年12月</h2>
+            <button id="next-month">下个月</button>
+        </div>
+        <table class="calendar">
+            <thead>
+                <tr>
+                    <th>周日</th>
+                    <th>周一</th>
+                    <th>周二</th>
+                    <th>周三</th>
+                    <th>周四</th>
+                    <th>周五</th>
+                    <th>周六</th>
+                </tr>
+            </thead>
+            <tbody id="calendar-body">
+                <!-- 日历内容会通过JavaScript动态生成 -->
+            </tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
