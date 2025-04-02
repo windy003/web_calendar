@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
         pickerContainer.appendChild(title);
         
         // 创建年份选择器
-         yearLabel = document.createElement('label');
+        yearLabel = document.createElement('label');
         yearLabel.textContent = '年份：';
         yearSelect = document.createElement('select');
         
