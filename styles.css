@@ -71,6 +71,7 @@ body {
     align-items: center;
     height: 100%;
     width: 100%;
+    min-height: 50px;
 }
 
 .solar-date {
@@ -107,4 +108,41 @@ body {
 
 .calendar td:hover {
     background-color: #f0f0f0;
+}
+
+/* 节假日样式 */
+.holiday {
+    background-color: #f5f5f5; /* 浅灰色背景 */
+}
+
+.important-holiday-cell {
+    background-color: #fff8e1; /* 重要节日有特殊背景色 */
+}
+
+.holiday-date {
+    color: #e53935;
+    font-size: 0.75em;
+    font-weight: bold;
+}
+
+/* 不同类型节日的颜色 */
+.legal-holiday {
+    color: #d32f2f; /* 法定节假日 - 深红色 */
+    font-weight: bold;
+}
+
+.lunar-holiday {
+    color: #e53935; /* 传统农历节日 - 红色 */
+}
+
+.fixed-holiday {
+    color: #1976d2; /* 固定公历节日 - 蓝色 */
+}
+
+.solarTerm-holiday {
+    color: #388e3c; /* 节气 - 绿色 */
+}
+
+.important-holiday {
+    font-weight: bold; /* 重要节日加粗 */
 } 
