@@ -37,232 +37,170 @@ document.addEventListener('DOMContentLoaded', function() {
         return typeof Lunar !== 'undefined';
     }
 
-    // 添加通用节假日生成功能
-    const HolidayUtil = (function() {
-        // 固定公历节日（每年相同日期）
-        const FIXED_HOLIDAYS = {
-            '01-01': { name: '元旦', type: 'fixed', important: true },
-            '02-14': { name: '情人节', type: 'fixed', important: false },
-            '03-08': { name: '妇女节', type: 'fixed', important: false },
-            '03-12': { name: '植树节', type: 'fixed', important: false },
-            '04-01': { name: '愚人节', type: 'fixed', important: false },
-            '05-01': { name: '劳动节', type: 'fixed', important: true },
-            '05-04': { name: '青年节', type: 'fixed', important: false },
-            '06-01': { name: '儿童节', type: 'fixed', important: false },
-            '07-01': { name: '建党节', type: 'fixed', important: false },
-            '08-01': { name: '建军节', type: 'fixed', important: false },
-            '09-10': { name: '教师节', type: 'fixed', important: false },
-            '10-01': { name: '国庆节', type: 'fixed', important: true },
-            '12-24': { name: '平安夜', type: 'fixed', important: false },
-            '12-25': { name: '圣诞节', type: 'fixed', important: false }
-        };
+    // 在控制台中添加调试函数，以检查Lunar库的功能
+    function testLunarLibrary() {
+        console.log("===== 测试Lunar库功能 =====");
         
-        // 法定节假日规则（这些节日由农历确定日期，但属于法定节假日）
-        const LEGAL_LUNAR_HOLIDAYS = [
-            { name: '春节', lunarMonth: 1, lunarDay: 1, daysBefore: 1, daysAfter: 2, important: true }, // 除夕+初一+初二+初三
-            { name: '清明节', solarTerm: '清明', daysAfter: 2, important: true }, // 清明当天及后两天
-            { name: '端午节', lunarMonth: 5, lunarDay: 5, daysAfter: 2, important: true }, // 端午及后两天
-            { name: '中秋节', lunarMonth: 8, lunarDay: 15, daysAfter: 2, important: true }, // 中秋及后两天
-            { name: '国庆节假期', month: 10, day: 2, daysAfter: 6, important: true } // 10月1日已在固定节日中，这里是额外的假期
-        ];
-        
-        // 传统农历节日
-        const TRADITIONAL_LUNAR_HOLIDAYS = [
-            { name: '除夕', lunarMonth: 12, lunarDay: 29, lastDayOfYear: true, important: true }, // 特殊：如果农历12月小月，则为30日的前一天
-            { name: '元宵节', lunarMonth: 1, lunarDay: 15, important: true },
-            { name: '龙抬头', lunarMonth: 2, lunarDay: 2, important: false },
-            { name: '七夕', lunarMonth: 7, lunarDay: 7, important: true },
-            { name: '中元节', lunarMonth: 7, lunarDay: 15, important: false },
-            { name: '重阳节', lunarMonth: 9, lunarDay: 9, important: true },
-            { name: '腊八节', lunarMonth: 12, lunarDay: 8, important: false },
-            { name: '小年', lunarMonth: 12, lunarDay: 23, important: false }
-        ];
-        
-        // 计算除夕日期（农历十二月的最后一天）
-        const calculateChineseNewYearEve = function(year) {
+        try {
             if (typeof Lunar === 'undefined') {
-                return null;
+                console.error("Lunar库未加载!");
+                return false;
             }
             
-            // 测试农历十二月是大月还是小月
-            const nextYear = Lunar.fromYmd(year + 1, 1, 1); // 下一年正月初一
-            const chineseNewYearEve = nextYear.getSolar();
-            chineseNewYearEve.addDays(-1); // 减去一天就是除夕
+            // 测试基本转换
+            const now = new Date();
+            console.log("当前日期:", now);
             
-            return chineseNewYearEve;
-        };
-        
-        // 计算特定节气的日期
-        const getSolarTermDate = function(year, solarTermName) {
-            if (typeof Lunar === 'undefined') {
-                return null;
+            const lunarDate = Lunar.fromDate(now);
+            console.log("农历日期对象:", lunarDate);
+            
+            // 检查可用的方法
+            console.log("Lunar对象方法:");
+            for (let key in lunarDate) {
+                if (typeof lunarDate[key] === 'function') {
+                    console.log(` - ${key}`);
+                }
             }
             
-            try {
-                const solarYear = Lunar.fromDate(new Date(year, 0, 1)).getSolar();
-                const jieQiList = solarYear.getJieQiList();
-                
-                return jieQiList[solarTermName];
-            } catch (e) {
-                console.error(`获取节气 ${solarTermName} 日期出错:`, e);
-                return null;
-            }
-        };
-        
-        // 为指定年份计算所有节假日
-        const calculateHolidays = function(year) {
-            const holidays = {};
-            const yearStr = year.toString();
+            // 检查农历节日
+            const festivals = lunarDate.getFestivals();
+            console.log("今天的农历节日:", festivals);
             
-            // 添加固定公历节日
-            Object.keys(FIXED_HOLIDAYS).forEach(dateKey => {
-                const fullKey = `${yearStr}-${dateKey}`;
-                holidays[fullKey] = FIXED_HOLIDAYS[dateKey];
-            });
-            
-            // 如果Lunar库未加载，只返回固定公历节日
-            if (typeof Lunar === 'undefined') {
-                return holidays;
-            }
-            
-            try {
-                // 添加法定农历节假日
-                LEGAL_LUNAR_HOLIDAYS.forEach(holiday => {
-                    let baseDate;
-                    
-                    // 基于节气的假日（如清明节）
-                    if (holiday.solarTerm) {
-                        baseDate = getSolarTermDate(year, holiday.solarTerm);
-                    }
-                    // 基于农历日期的假日（如春节、端午、中秋）
-                    else if (holiday.lunarMonth && holiday.lunarDay) {
-                        const lunarDate = Lunar.fromYmd(year, holiday.lunarMonth, holiday.lunarDay);
-                        baseDate = lunarDate.getSolar();
-                    }
-                    // 基于公历日期的假日
-                    else if (holiday.month && holiday.day) {
-                        baseDate = Solar.fromYmd(year, holiday.month, holiday.day);
-                    }
-                    
-                    if (!baseDate) return;
-                    
-                    // 添加法定假日前几天
-                    if (holiday.daysBefore) {
-                        for (let i = 1; i <= holiday.daysBefore; i++) {
-                            const beforeDate = baseDate.clone();
-                            beforeDate.addDays(-i);
-                            
-                            const dateKey = `${yearStr}-${(beforeDate.getMonth()+1).toString().padStart(2, '0')}-${beforeDate.getDay().toString().padStart(2, '0')}`;
-                            holidays[dateKey] = {
-                                name: i === 1 && holiday.name === '春节' ? '除夕' : `${holiday.name}前${i}天`,
-                                type: 'legal',
-                                important: holiday.important
-                            };
-                        }
-                    }
-                    
-                    // 添加法定假日当天
-                    const baseDateKey = `${yearStr}-${(baseDate.getMonth()+1).toString().padStart(2, '0')}-${baseDate.getDay().toString().padStart(2, '0')}`;
-                    holidays[baseDateKey] = {
-                        name: holiday.name,
-                        type: 'legal',
-                        important: holiday.important
-                    };
-                    
-                    // 添加法定假日后几天
-                    if (holiday.daysAfter) {
-                        for (let i = 1; i <= holiday.daysAfter; i++) {
-                            const afterDate = baseDate.clone();
-                            afterDate.addDays(i);
-                            
-                            const dateKey = `${yearStr}-${(afterDate.getMonth()+1).toString().padStart(2, '0')}-${afterDate.getDay().toString().padStart(2, '0')}`;
-                            holidays[dateKey] = {
-                                name: `${holiday.name}假期`,
-                                type: 'legal',
-                                important: holiday.important
-                            };
-                        }
-                    }
-                });
-                
-                // 添加传统农历节日
-                TRADITIONAL_LUNAR_HOLIDAYS.forEach(holiday => {
-                    let lunarDate;
-                    
-                    // 特殊处理除夕（农历最后一天）
-                    if (holiday.lastDayOfYear) {
-                        const chineseNewYearEve = calculateChineseNewYearEve(year);
-                        if (chineseNewYearEve) {
-                            const dateKey = `${yearStr}-${(chineseNewYearEve.getMonth()+1).toString().padStart(2, '0')}-${chineseNewYearEve.getDay().toString().padStart(2, '0')}`;
-                            holidays[dateKey] = {
-                                name: holiday.name,
-                                type: 'lunar',
-                                important: holiday.important
-                            };
-                        }
-                    } else {
-                        lunarDate = Lunar.fromYmd(year, holiday.lunarMonth, holiday.lunarDay);
+            // 测试阳历转农历再转回阳历
                         const solarDate = lunarDate.getSolar();
-                        
-                        const dateKey = `${yearStr}-${(solarDate.getMonth()+1).toString().padStart(2, '0')}-${solarDate.getDay().toString().padStart(2, '0')}`;
-                        holidays[dateKey] = {
-                            name: holiday.name,
-                            type: 'lunar',
-                            important: holiday.important
-                        };
-                    }
-                });
+            console.log("转回阳历:", solarDate);
+            
+            // 测试明确的农历日期 - 春节测试
+            const springFestival = Lunar.fromYmd(now.getFullYear(), 1, 1);
+            console.log("农历正月初一:", springFestival);
+            const sfSolar = springFestival.getSolar();
+            console.log("春节公历日期:", sfSolar);
+            console.log("春节公历日期字符串:", 
+                `${sfSolar.getYear()}-${sfSolar.getMonth()}-${sfSolar.getDay()}`);
+            
+            return true;
+        } catch (e) {
+            console.error("测试Lunar库时出错:", e);
+            console.error("错误堆栈:", e.stack);
+            return false;
+        }
+    }
+
+    // 完全重写节假日计算逻辑
+    const HolidayUtil = (function() {
+        // 创建直接访问Lunar库的节假日计算函数
+        function getLunarFestival(date) {
+            try {
+                if (typeof Lunar === 'undefined') return null;
                 
-                // 添加24节气
-                const solarYear = Lunar.fromDate(new Date(year, 0, 1)).getSolar();
-                const jieQiList = solarYear.getJieQiList();
+                const lunar = Lunar.fromDate(date);
+                // 获取农历节日
+                const festivals = lunar.getFestivals();
+                if (festivals && festivals.length > 0) {
+                    return {
+                        name: festivals[0],
+                        type: 'lunar',
+                        important: true
+                    };
+                }
                 
-                for (let jieQiName in jieQiList) {
-                    const date = jieQiList[jieQiName];
-                    const dateKey = `${yearStr}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDay().toString().padStart(2, '0')}`;
-                    
-                    // 如果这一天已经有更重要的节日，就不覆盖
-                    if (holidays[dateKey] && holidays[dateKey].important) {
-                        continue;
-                    }
-                    
-                    holidays[dateKey] = {
-                        name: jieQiName,
+                // 检查节气
+                const jieQi = lunar.getJieQi();
+                if (jieQi) {
+                    return {
+                        name: jieQi,
                         type: 'solarTerm',
                         important: false
                     };
                 }
-                
             } catch (e) {
-                console.error(`计算${year}年节假日出错:`, e);
+                console.error("获取农历节日出错:", e);
+            }
+            return null;
+        }
+        
+        // 获取公历节日（直接硬编码一些重要节日）
+        function getSolarFestival(date) {
+            const month = date.getMonth() + 1; // 月份是0-11
+            const day = date.getDate();
+            
+            const festivals = {
+                "1-1": { name: "元旦", type: "fixed", important: true },
+                "2-14": { name: "情人节", type: "fixed", important: false },
+                "3-8": { name: "妇女节", type: "fixed", important: false },
+                "4-1": { name: "愚人节", type: "fixed", important: false },
+                "5-1": { name: "劳动节", type: "fixed", important: true },
+                "6-1": { name: "儿童节", type: "fixed", important: false },
+                "10-1": { name: "国庆节", type: "fixed", important: true },
+                "10-2": { name: "国庆节", type: "fixed", important: true },
+                "10-3": { name: "国庆节", type: "fixed", important: true },
+                "12-25": { name: "圣诞节", type: "fixed", important: false }
+            };
+            
+            const key = `${month}-${day}`;
+            return festivals[key] || null;
+        }
+        
+        // 获取当前日期的所有节假日信息
+        function getHolidaysForDate(date) {
+            // 先检查公历节日
+            const solarFestival = getSolarFestival(date);
+            if (solarFestival && solarFestival.important) {
+                return solarFestival;
             }
             
-            return holidays;
-        };
+            // 再检查农历节日
+            const lunarFestival = getLunarFestival(date);
+            if (lunarFestival && lunarFestival.important) {
+                return lunarFestival;
+            }
+            
+            // 如果都不是重要节日，返回第一个找到的
+            return lunarFestival || solarFestival;
+        }
+        
+        // 为指定年月计算所有日期的节假日
+        function calculateHolidaysForMonth(year, month) {
+            console.log(`计算节假日: ${year}年${month+1}月`);
+            const result = {};
+            
+            // 获取当月天数
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // 对每一天计算节假日
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const holiday = getHolidaysForDate(date);
+                
+                if (holiday) {
+                    const key = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    result[key] = holiday;
+                    console.log(`找到节假日: ${key} - ${holiday.name}`);
+                }
+            }
+            
+            return result;
+        }
         
         return {
-            calculateHolidays: calculateHolidays
+            calculateHolidaysForMonth: calculateHolidaysForMonth,
+            getHolidaysForDate: getHolidaysForDate
         };
     })();
 
     // 全局假日缓存
     const holidayCache = {};
 
-    // 获取节假日信息
+    // 更新获取节假日的函数
     function getHoliday(year, month, day) {
-        // 确保月份和日期是两位数
-        const monthStr = (month + 1).toString().padStart(2, '0');
-        const dayStr = day.toString().padStart(2, '0');
-        const dateKey = `${year}-${monthStr}-${dayStr}`;
-        
-        // 如果当年节假日数据未加载，则加载
-        if (!holidayCache[year]) {
-            console.log(`加载${year}年节假日数据`);
-            holidayCache[year] = HolidayUtil.calculateHolidays(year);
-            console.log(`${year}年节假日数据:`, holidayCache[year]);
+        try {
+            // 直接使用日期对象计算
+            const date = new Date(year, month, day);
+            return HolidayUtil.getHolidaysForDate(date);
+        } catch (e) {
+            console.error(`获取节假日信息出错 (${year}-${month+1}-${day}):`, e);
+            return null;
         }
-        
-        return holidayCache[year][dateKey];
     }
 
     // 渲染日历
@@ -293,40 +231,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let date = 1;
         let nextMonthDate = 1;
 
-        // 预加载当年和相邻年份的节假日数据
-        if (!holidayCache[currentYear]) {
-            holidayCache[currentYear] = HolidayUtil.calculateHolidays(currentYear);
-        }
+        // 页面加载时先测试Lunar库
+        const lunarLibraryWorks = testLunarLibrary();
+        console.log("Lunar库可用:", lunarLibraryWorks);
         
-        // 跨年的情况，如当前是12月，预加载下一年，或当前是1月，预加载上一年
-        if (currentMonth === 11 && !holidayCache[currentYear + 1]) {
-            holidayCache[currentYear + 1] = HolidayUtil.calculateHolidays(currentYear + 1);
-        } else if (currentMonth === 0 && !holidayCache[currentYear - 1]) {
-            holidayCache[currentYear - 1] = HolidayUtil.calculateHolidays(currentYear - 1);
-        }
-
-        // 打印当前年月信息
-        console.log(`渲染日历: ${currentYear}年${currentMonth + 1}月`);
-        
-        // 检查 Lunar 库状态
-        if (typeof Lunar !== 'undefined') {
-            console.log('Lunar库已加载');
-            // 测试农历转换
-            try {
-                const testDate = new Date(currentYear, currentMonth, 1);
-                const testLunar = Lunar.fromDate(testDate);
-                console.log('测试农历转换:', testLunar);
-                console.log('农历月日:', testLunar.getMonthInChinese(), testLunar.getDayInChinese());
-                // 测试公历到农历再到公历的转换
-                const testSolar = testLunar.getSolar();
-                console.log('农历转回公历:', testSolar);
-            } catch (e) {
-                console.error('农历转换测试失败:', e);
-            }
-        } else {
-            console.warn('Lunar库未加载，节假日信息可能不完整');
-        }
-
         // 创建日历表格的行和单元格
         for (let i = 0; i < 6; i++) {
             // 创建新行
@@ -436,32 +344,33 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // 添加到容器
                             dateContainer.appendChild(lunarElement);
+                            
+                            // 直接尝试获取节日
+                            const festivals = lunarDate.getFestivals();
+                            if (festivals && festivals.length > 0) {
+                                const holidayElement = document.createElement('div');
+                                holidayElement.textContent = festivals[0];
+                                holidayElement.classList.add('holiday-date', 'lunar-holiday');
+                                dateContainer.appendChild(holidayElement);
+                                cell.classList.add('holiday');
+                                console.log(`${currentYear}-${currentMonth+1}-${date} 农历节日:`, festivals[0]);
+                            }
                         }
                         
-                        // 检查是否为节假日
-                        const holiday = getHoliday(currentYear, currentMonth, date);
-                        if (holiday) {
-                            console.log(`发现节假日: ${currentYear}-${currentMonth+1}-${date}`, holiday);
+                        // 简化的节假日检查
+                        const currentDate = new Date(currentYear, currentMonth, date);
+                        const holiday = HolidayUtil.getHolidaysForDate(currentDate);
+                        
+                        // 如果有节假日且还没有添加过节日元素
+                        if (holiday && !dateContainer.querySelector('.holiday-date')) {
                             const holidayElement = document.createElement('div');
-                            holidayElement.textContent = typeof holiday === 'string' ? holiday : holiday.name;
-                            holidayElement.classList.add('holiday-date');
-                            
-                            // 根据不同类型的节日设置不同的样式
-                            if (typeof holiday !== 'string' && holiday.type) {
-                                holidayElement.classList.add(`${holiday.type}-holiday`);
-                            }
-                            
-                            // 如果是重要节日，添加额外的样式
-                            if (holiday.important) {
-                                holidayElement.classList.add('important-holiday');
-                                cell.classList.add('important-holiday-cell');
-                            }
-                            
+                            holidayElement.textContent = holiday.name;
+                            holidayElement.classList.add('holiday-date', `${holiday.type}-holiday`);
                             dateContainer.appendChild(holidayElement);
                             cell.classList.add('holiday');
                         }
                     } catch (e) {
-                        console.error('日期转换错误:', e);
+                        console.error(`渲染日期 ${currentYear}-${currentMonth+1}-${date} 出错:`, e);
                     }
                     
                     cell.appendChild(dateContainer);
@@ -530,4 +439,14 @@ document.addEventListener('DOMContentLoaded', function() {
             showDebug(true);
         }
     });
+
+    // 添加一个初始化函数，在页面加载时运行
+    function initCalendar() {
+        console.log("初始化日历...");
+        testLunarLibrary();
+        renderCalendar();
+    }
+
+    // 页面加载后运行初始化
+    initCalendar();
 });
