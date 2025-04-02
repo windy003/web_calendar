@@ -60,21 +60,51 @@ body {
 .calendar td {
     height: 80px;
     vertical-align: top;
-    text-align: right;
     padding: 5px;
     border: 1px solid #e0e0e0;
+    position: relative;
 }
 
-.calendar td:hover {
-    background-color: #f0f0f0;
+.date-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.solar-date {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.lunar-date {
+    font-size: 12px;
+    color: #666;
 }
 
 .calendar .today {
     background-color: #4285f4;
+}
+
+.calendar .today .solar-date,
+.calendar .today .lunar-date {
     color: white;
 }
 
-.calendar .other-month {
+.calendar .other-month .solar-date {
     color: #bbb;
+}
+
+.calendar .other-month {
     background-color: #f9f9f9;
+}
+
+.calendar .other-month .lunar-date {
+    color: #ccc;
+}
+
+.calendar td:hover {
+    background-color: #f0f0f0;
 } 

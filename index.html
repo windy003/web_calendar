@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>简易日历</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="lunar.js"></script>
+
 </head>
 <body>
+    <div id="debug-info" style="display:none; padding: 10px; background: #f0f0f0; margin-bottom: 10px;">
+        调试信息将显示在这里
+    </div>
+    
+    <div id="lunar-test" style="padding: 10px; margin-bottom: 10px;">
+        农历测试: <span id="lunar-result">正在检查...</span>
+    </div>
+    
     <div class="calendar-container">
         <div class="calendar-header">
             <button id="prev-month">上个月</button>
@@ -31,5 +41,22 @@
         </table>
     </div>
     <script src="script.js"></script>
+    <script>
+        // 页面加载后运行简单测试
+        window.addEventListener('load', function() {
+            const resultElement = document.getElementById('lunar-result');
+            try {
+                if (typeof Lunar !== 'undefined') {
+                    const today = new Date();
+                    const lunarDate = Lunar.fromDate(today);
+                    resultElement.textContent = `今天的农历日期：${lunarDate.getYearInChinese()}年${lunarDate.getMonthInChinese()}月${lunarDate.getDayInChinese()}`;
+                } else {
+                    resultElement.textContent = '农历库未加载';
+                }
+            } catch (e) {
+                resultElement.textContent = `错误：${e.message}`;
+            }
+        });
+    </script>
 </body>
 </html>

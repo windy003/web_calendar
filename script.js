@@ -8,61 +8,132 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevMonthButton = document.getElementById('prev-month');
     const nextMonthButton = document.getElementById('next-month');
 
+    // 添加事件监听器
+    prevMonthButton.addEventListener('click', showPreviousMonth);
+    nextMonthButton.addEventListener('click', showNextMonth);
+
+    // 显示上个月
+    function showPreviousMonth() {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    }
+
+    // 显示下个月
+    function showNextMonth() {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar();
+    }
+
+    // 检查lunar库是否加载
+    function isLunarLoaded() {
+        return typeof Lunar !== 'undefined';
+    }
+
     // 渲染日历
     function renderCalendar() {
-        // 获取当前月份的第一天
-        const firstDay = new Date(currentYear, currentMonth, 1);
-        // 获取当前月份的最后一天
-        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        // 清空日历内容
+        calendarBody.innerHTML = '';
         
-        // 更新月份和年份显示
+        // 更新标题
         const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
         monthYearElement.textContent = `${currentYear}年 ${monthNames[currentMonth]}`;
         
-        // 清空日历表格内容
-        calendarBody.innerHTML = '';
+        // 获取当月第一天
+        const firstDay = new Date(currentYear, currentMonth, 1);
         
-        // 获取当前月份第一天是星期几（0表示星期日）
-        let firstDayIndex = firstDay.getDay();
+        // 获取当月天数
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         
-        // 获取上个月的最后一天
-        const prevLastDay = new Date(currentYear, currentMonth, 0);
-        // 返回该日期对象所代表的月份中的第几天
-        const prevDaysCount = prevLastDay.getDate();
+        // 获取当月第一天是星期几
+        const firstDayIndex = firstDay.getDay();
         
-        // 计算日历表格需要的行数
-        // 当前月份有几天
-        const daysInMonth = lastDay.getDate();
-        // 计算日历表格需要的行数
-        const totalCells = Math.ceil((daysInMonth + firstDayIndex) / 7) * 7;
+        // 获取上个月的天数
+        const prevDaysCount = new Date(currentYear, currentMonth, 0).getDate();
         
+        // 计算总单元格数量 (最多6行 * 7天)
+        const totalCells = 42;
+        
+        // 初始日期计数器
         let date = 1;
         let nextMonthDate = 1;
-        
+
         // 创建日历表格的行和单元格
-        // 这里的i表示行数
-        for (let i = 0; i < totalCells / 7; i++) {
+        for (let i = 0; i < 6; i++) {
             // 创建新行
             const row = document.createElement('tr');
             
             // 创建行中的7个单元格（一周七天）
-            // 这里的j表示一行中的7个单元格
             for (let j = 0; j < 7; j++) {
                 const cell = document.createElement('td');
                 
                 if (i === 0 && j < firstDayIndex) {
                     // 上个月的日期
                     const prevDate = prevDaysCount - (firstDayIndex - j - 1);
-                    cell.textContent = prevDate;
+                    
+                    // 使用div包装日期以便于添加样式
+                    const dateContainer = document.createElement('div');
+                    dateContainer.classList.add('date-container');
+                    
+                    const solarDate = document.createElement('div');
+                    solarDate.textContent = prevDate;
+                    solarDate.classList.add('solar-date');
+                    
+                    dateContainer.appendChild(solarDate);
+                    cell.appendChild(dateContainer);
                     cell.classList.add('other-month');
                 } else if (date > daysInMonth) {
                     // 下个月的日期
-                    cell.textContent = nextMonthDate;
+                    const dateContainer = document.createElement('div');
+                    dateContainer.classList.add('date-container');
+                    
+                    const solarDate = document.createElement('div');
+                    solarDate.textContent = nextMonthDate;
+                    solarDate.classList.add('solar-date');
+                    
+                    dateContainer.appendChild(solarDate);
+                    cell.appendChild(dateContainer);
                     cell.classList.add('other-month');
+                    
                     nextMonthDate++;
                 } else {
                     // 当前月份的日期
-                    cell.textContent = date;
+                    const dateContainer = document.createElement('div');
+                    dateContainer.classList.add('date-container');
+                    
+                    // 创建公历日期元素
+                    const solarDate = document.createElement('div');
+                    solarDate.textContent = date;
+                    solarDate.classList.add('solar-date');
+                    
+                    // 添加到容器
+                    dateContainer.appendChild(solarDate);
+                    
+                    try {
+                        // 获取农历信息
+                        if (typeof Lunar !== 'undefined') {
+                            const lunarDate = Lunar.fromDate(new Date(currentYear, currentMonth, date));
+                            
+                            // 创建农历日期元素
+                            const lunarElement = document.createElement('div');
+                            lunarElement.textContent = lunarDate.getDayInChinese();
+                            lunarElement.classList.add('lunar-date');
+                            
+                            // 添加到容器
+                            dateContainer.appendChild(lunarElement);
+                        }
+                    } catch (e) {
+                        console.error('农历转换错误:', e);
+                    }
+                    
+                    cell.appendChild(dateContainer);
                     
                     // 标记今天的日期
                     if (date === currentDate.getDate() && 
@@ -79,33 +150,53 @@ document.addEventListener('DOMContentLoaded', function() {
             
             calendarBody.appendChild(row);
             
-            // 如果已经显示完当前月份的所有日期，而且已经填充了完整的一周，就不再添加新行
-            if (date > daysInMonth && (i + 1) * 7 >= firstDayIndex + daysInMonth) {
+            // 如果已经显示完当前月份的所有日期，就跳出循环
+            if (date > daysInMonth) {
                 break;
             }
         }
     }
 
-    // 前一个月按钮事件
-    prevMonthButton.addEventListener('click', function() {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        renderCalendar();
-    });
-
-    // 下一个月按钮事件
-    nextMonthButton.addEventListener('click', function() {
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-        renderCalendar();
-    });
-
-    // 初始渲染
+    // 页面加载完成后渲染日历
+    if (!isLunarLoaded()) {
+        console.warn('农历库未加载，将只显示公历日期');
+    }
     renderCalendar();
+
+    // 添加简单的调试功能
+    function showDebug(show) {
+        const debugInfo = document.getElementById('debug-info');
+        if (show) {
+            debugInfo.style.display = 'block';
+            let lunarInfo = '未加载';
+            try {
+                if (typeof Lunar !== 'undefined') {
+                    const today = new Date();
+                    const lunarDate = Lunar.fromDate(today);
+                    lunarInfo = `已加载，今天的农历日期：${lunarDate.getYearInChinese()}年${lunarDate.getMonthInChinese()}月${lunarDate.getDayInChinese()}`;
+                }
+            } catch (e) {
+                lunarInfo = `加载出错: ${e.message}`;
+            }
+            
+            debugInfo.innerHTML = `
+                <p>公历: ${currentYear}年${currentMonth + 1}月</p>
+                <p>农历库状态: ${lunarInfo}</p>
+                <button onclick="hideDebug()">关闭调试</button>
+            `;
+        } else {
+            debugInfo.style.display = 'none';
+        }
+    }
+
+    function hideDebug() {
+        document.getElementById('debug-info').style.display = 'none';
+    }
+
+    // 添加键盘快捷键显示调试信息 (按D键)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'd' || e.key === 'D') {
+            showDebug(true);
+        }
+    });
 });
